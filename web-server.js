@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var port = process.env.PORT || 3000;
 var bodyParser = require('body-parser');
+var _ = require('underscore');
 var todos = [];
 var nextItem = 1;
 
@@ -17,35 +18,38 @@ app.get('/todos', function(req, res) {
 });
 
 // GET /todos/:id
-app.get('/todos/:id', function(req, res) {
+app.get('/todos/:id', function (req, res) {
 	var idNumber = parseInt(req.params.id, 10);
-	//console.log('Item Requested: ' + idNumber);
-	var pageFound = -1;
-	for(var i = 0; i < todos.length; i++)
-	{
-		if(todos[i].id === idNumber)
-		{
-			pageFound = 1;
-			res.json(todos[i]);
-			break;
-		}
-	}
 
-	if(pageFound == -1)
-		res.status(404).send('Page Not Found');
+	var matchedItem = _.findWhere(todos, {id: idNumber});
+
+	if(typeof matchedItem !== 'undefined')
+		res.json(matchedItem);
+	else
+		res.status(404).send('Item not found');
 });
 
 // POST /todos
-app.post('/todos', function(req, res){
-	var body = req.body;
+app.post('/todos', function (req, res) {
+	var body = _.pick(req.body, 'description', 'completed');
 
-	//adding an ID
-	body.id = nextItem++;
+	if(!_.isBoolean(body.completed))
+		res.status(404).send('Completed Status - Incorrect Field Type');
+	else if(!_.isString(body.description))
+		res.status(404).send('Description - Incorrect Field Type');
+	else if(body.description.trim().length === 0)
+		res.status(404).send('Invalid Description');
+	else 
+	{
+		body.description = body.description.trim();
+		//adding an ID
+		body.id = nextItem++;
 	
-	//adding it to the list of todos
-	todos.push(body);
+		//adding it to the list of todos
+		todos.push(body);
 
-	res.json(body);
+		res.json(body);
+	}
 });
 
 
