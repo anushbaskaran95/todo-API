@@ -1,19 +1,11 @@
 var express = require('express');
 var app = express();
 var port = process.env.PORT || 3000;
-var todos = [{
-	id: 1,
-	description: 'cancel netflix before you leave',
-	completed: false	
-}, { 
-	id: 2,
-	description: 'get notes and coins for sriram',
-	completed: false 
-}, {
-	id: 3,
-	description: 'complete maths homework',
-	completed: true
-}];
+var bodyParser = require('body-parser');
+var todos = [];
+var nextItem = 1;
+
+app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
 	res.send('Hello! to-do API test page!');
@@ -41,6 +33,19 @@ app.get('/todos/:id', function(req, res) {
 
 	if(pageFound == -1)
 		res.status(404).send('Page Not Found');
+});
+
+// POST /todos
+app.post('/todos', function(req, res){
+	var body = req.body;
+
+	//adding an ID
+	body.id = nextItem++;
+	
+	//adding it to the list of todos
+	todos.push(body);
+
+	res.json(body);
 });
 
 
