@@ -52,6 +52,21 @@ app.post('/todos', function (req, res) {
 	}
 });
 
+// DELETE /todos/:id
+
+app.delete('/todos/:id', function (req, res) {
+	var idToDelete = parseInt(req.params.id, 10);
+	var matchedItem = _.findWhere(todos, {id: idToDelete});
+
+	if(typeof matchedItem != 'undefined')
+	{
+		todos = _.without(todos, matchedItem);
+		res.json(matchedItem);
+	}
+	else
+		res.status(404).json({"error": "Item not found"});
+});
+
 
 app.listen(port, function () {
 	console.log('to-do API server started at port: ' + port);
