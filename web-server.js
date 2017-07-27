@@ -12,9 +12,17 @@ app.get('/', function (req, res) {
 	res.send('Hello! to-do API test page!');
 });
 
-// GET /todos
+// GET /todos?completed=x //queryParameter returns {completed: 'true'} where true is a string -> not bool
 app.get('/todos', function(req, res) {
-	res.json(todos);
+	var queryParameter = req.query;
+	var filteredTodos = todos;
+
+	if(queryParameter.hasOwnProperty('completed') && queryParameter.completed === 'true')
+		filteredTodos = _.where(todos, {completed: true});
+	else if(queryParameter.hasOwnProperty('completed') && queryParameter.completed === 'false')
+		filteredTodos = _.where(todos, {completed: false});
+
+	res.json(filteredTodos);
 });
 
 // GET /todos/:id
