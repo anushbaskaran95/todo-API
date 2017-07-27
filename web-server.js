@@ -1,8 +1,8 @@
 var express = require('express');
-var app = express();
-var port = process.env.PORT || 3000;
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+var app = express();
+var port = process.env.PORT || 3000;
 var todos = [];
 var nextItem = 1;
 
@@ -34,11 +34,11 @@ app.post('/todos', function (req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
 	if(!_.isBoolean(body.completed))
-		res.status(404).send('Completed Status - Incorrect Field Type');
+		res.status(400).send('Completed Status - Incorrect Field Type');
 	else if(!_.isString(body.description))
-		res.status(404).send('Description - Incorrect Field Type');
+		res.status(400).send('Description - Incorrect Field Type');
 	else if(body.description.trim().length === 0)
-		res.status(404).send('Invalid Description');
+		res.status(400).send('Invalid Description');
 	else 
 	{
 		body.description = body.description.trim();
@@ -65,6 +65,31 @@ app.delete('/todos/:id', function (req, res) {
 	}
 	else
 		res.status(404).json({"error": "Item not found"});
+});
+
+// PUT /todos/:id
+
+app.put('/todos/:id', function (req, res) {
+	var body = _.pick(req.body, 'description', 'completed');
+	var idToFind = parseInt(req.params.id, 10);
+	var matchedObject = _.findWhere(todos, {id : idToFind});
+	var updatedAttributes = {};
+
+	if(typeof matchedObject === 'undefined')
+		return res.status(404).send('object not found');
+
+	if(body.hasOwnProperty('completed') && _.isBoolean(body.completed))
+		updatedAttributes.completed = body.completed;
+	else if(body.hasOwnProperty('completed'))
+		return res.send(400).send('Incorrect Data Type - Completed');
+
+	if(body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0)
+		updatedAttributes.description = body.description.trim();
+	else if(body.hasOwnProperty('description'))
+		return res.send(400).send('Incorrect Data Type - Description');
+
+	_.extend(matchedObject, updatedAttributes);
+	res.json(matchedObject);
 });
 
 
