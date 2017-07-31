@@ -16,24 +16,48 @@ app.get('/', function(req, res) {
 // GET /todos?completed=x //queryParameter returns {completed: 'true'} where true is a string -> not bool
 app.get('/todos', function(req, res) {
 	var queryParameter = req.query;
-	var filteredTodos = todos;
+	var where = {};
 
-	if (queryParameter.hasOwnProperty('completed') && queryParameter.completed === 'true')
-		filteredTodos = _.where(todos, {
-			completed: true
-		});
-	else if (queryParameter.hasOwnProperty('completed') && queryParameter.completed === 'false')
-		filteredTodos = _.where(todos, {
-			completed: false
-		});
+	if(queryParameter.hasOwnProperty('completed') && queryParameter.completed === 'true')
+		where.completed = true;
+	else if(queryParameter.hasOwnProperty('completed') && queryParameter === 'false')
+		where.completed = false;
 
-	if (queryParameter.hasOwnProperty('q') && queryParameter.q.length > 0) {
-		filteredTodos = _.filter(filteredTodos, function(todo) {
-			return todo.description.toLowerCase().indexOf(queryParameter.q.toLowerCase()) >= 0;
-		});
+	if(queryParameter.hasOwnProperty('q') && queryParameter.q.length > 0) {
+		where.description = {
+			$like: '%' + queryParameter.q + '%'
+		};
 	}
 
-	res.json(filteredTodos);
+	db.todo.findAll({
+		where: where
+	}).then(function(todos) {
+		if(todos.length > 0) {
+			res.json(todos);
+		} else {
+			res.status(404).send('Item not found');
+		}
+	}, function(error) {
+		res.status(500).json(error);
+	});
+	// var filteredTodos = todos;
+
+	// if (queryParameter.hasOwnProperty('completed') && queryParameter.completed === 'true')
+	// 	filteredTodos = _.where(todos, {
+	// 		completed: true
+	// 	});
+	// else if (queryParameter.hasOwnProperty('completed') && queryParameter.completed === 'false')
+	// 	filteredTodos = _.where(todos, {
+	// 		completed: false
+	// 	});
+
+	// if (queryParameter.hasOwnProperty('q') && queryParameter.q.length > 0) {
+	// 	filteredTodos = _.filter(filteredTodos, function(todo) {
+	// 		return todo.description.toLowerCase().indexOf(queryParameter.q.toLowerCase()) >= 0;
+	// 	});
+	// }
+
+	//res.json(filteredTodos);
 });
 
 // GET /todos/:id
