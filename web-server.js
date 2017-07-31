@@ -40,14 +40,22 @@ app.get('/todos', function(req, res) {
 app.get('/todos/:id', function(req, res) {
 	var idNumber = parseInt(req.params.id, 10);
 
-	var matchedItem = _.findWhere(todos, {
-		id: idNumber
+	db.todo.findById(idNumber).then(function(todo){
+		if(!!todo)//convert an object or NULL to truth version
+			res.json(todo.toJSON());
+		else
+			res.status(404).send('Item not found!');
+	}, function(error) {
+		res.send(500).json(error);
 	});
+	// var matchedItem = _.findWhere(todos, {
+	// 	id: idNumber
+	// });
 
-	if (typeof matchedItem !== 'undefined')
-		res.json(matchedItem);
-	else
-		res.status(404).send('Item not found');
+	// if (typeof matchedItem !== 'undefined')
+	// 	res.json(matchedItem);
+	// else
+	// 	res.status(404).send('Item not found');
 });
 
 // POST /todos
