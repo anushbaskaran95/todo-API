@@ -18,12 +18,12 @@ app.get('/todos', function(req, res) {
 	var queryParameter = req.query;
 	var where = {};
 
-	if(queryParameter.hasOwnProperty('completed') && queryParameter.completed === 'true')
+	if (queryParameter.hasOwnProperty('completed') && queryParameter.completed === 'true')
 		where.completed = true;
-	else if(queryParameter.hasOwnProperty('completed') && queryParameter === 'false')
+	else if (queryParameter.hasOwnProperty('completed') && queryParameter === 'false')
 		where.completed = false;
 
-	if(queryParameter.hasOwnProperty('q') && queryParameter.q.length > 0) {
+	if (queryParameter.hasOwnProperty('q') && queryParameter.q.length > 0) {
 		where.description = {
 			$like: '%' + queryParameter.q + '%'
 		};
@@ -32,7 +32,7 @@ app.get('/todos', function(req, res) {
 	db.todo.findAll({
 		where: where
 	}).then(function(todos) {
-		if(todos.length > 0) {
+		if (todos.length > 0) {
 			res.json(todos);
 		} else {
 			res.status(404).send('Item not found');
@@ -64,8 +64,8 @@ app.get('/todos', function(req, res) {
 app.get('/todos/:id', function(req, res) {
 	var idNumber = parseInt(req.params.id, 10);
 
-	db.todo.findById(idNumber).then(function(todo){
-		if(!!todo)//convert an object or NULL to truth version
+	db.todo.findById(idNumber).then(function(todo) {
+		if (!!todo) //convert an object or NULL to truth version
 			res.json(todo.toJSON());
 		else
 			res.status(404).send('Item not found!');
@@ -89,7 +89,7 @@ app.post('/todos', function(req, res) {
 	db.todo.create(body).then(function(todo) {
 		res.json(todo.toJSON());
 	}, function(error) {
-		res.status(400).json(error);
+		res.status(500).json(error);
 	});
 
 	// if (!_.isBoolean(body.completed))
@@ -114,17 +114,33 @@ app.post('/todos', function(req, res) {
 
 app.delete('/todos/:id', function(req, res) {
 	var idToDelete = parseInt(req.params.id, 10);
-	var matchedItem = _.findWhere(todos, {
-		id: idToDelete
+
+	db.todo.destroy({
+		where: {
+			id: idToDelete
+		}
+	}).then(function(rowsDeleted) {
+		if(rowsDeleted === 0)
+			res.status(404).json({
+				error: 'item not found'
+			});
+		else
+			res.status(204).send();
+	}, function(error) {
+		res.status(500).json(error);
 	});
 
-	if (typeof matchedItem != 'undefined') {
-		todos = _.without(todos, matchedItem);
-		res.json(matchedItem);
-	} else
-		res.status(404).json({
-			"error": "Item not found"
-		});
+	// var matchedItem = _.findWhere(todos, {
+	// 	id: idToDelete
+	// });
+
+	// if (typeof matchedItem != 'undefined') {
+	// 	todos = _.without(todos, matchedItem);
+	// 	res.json(matchedItem);
+	// } else
+	// 	res.status(404).json({
+	// 		"error": "Item not found"
+	// 	});
 });
 
 // PUT /todos/:id
