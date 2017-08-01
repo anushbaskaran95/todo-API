@@ -37,8 +37,8 @@ app.get('/todos', function(req, res) {
 		} else {
 			res.status(404).send('Item not found');
 		}
-	}, function(error) {
-		res.status(500).json(error);
+	}, function() {
+		res.status(500).send();
 	});
 	// var filteredTodos = todos;
 
@@ -69,8 +69,8 @@ app.get('/todos/:id', function(req, res) {
 			res.json(todo.toJSON());
 		else
 			res.status(404).send('Item not found!');
-	}, function(error) {
-		res.send(500).json(error);
+	}, function() {
+		res.send(500).send();
 	});
 	// var matchedItem = _.findWhere(todos, {
 	// 	id: idNumber
@@ -89,7 +89,7 @@ app.post('/todos', function(req, res) {
 	db.todo.create(body).then(function(todo) {
 		res.json(todo.toJSON());
 	}, function(error) {
-		res.status(500).json(error);
+		res.status(400).json(error);
 	});
 
 	// if (!_.isBoolean(body.completed))
@@ -126,8 +126,8 @@ app.delete('/todos/:id', function(req, res) {
 			});
 		else
 			res.status(204).send();
-	}, function(error) {
-		res.status(500).json(error);
+	}, function() {
+		res.status(500).send();
 	});
 
 	// var matchedItem = _.findWhere(todos, {
@@ -148,26 +148,47 @@ app.delete('/todos/:id', function(req, res) {
 app.put('/todos/:id', function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 	var idToFind = parseInt(req.params.id, 10);
-	var matchedObject = _.findWhere(todos, {
-		id: idToFind
+	var attributes = {};
+
+	if(body.hasOwnProperty('completed'))
+		attributes.completed = body.completed;
+	if(body.hasOwnProperty('description'))
+		attributes.description = body.description;
+
+	db.todo.findById(idToFind).then(function(todo) {
+		if(!!todo) {
+			todo.update(attributes).then(function(todo) {
+				res.json(todo.toJSON());
+			}, function(error) {
+				res.status(400).json(error);
+			});
+		} else {
+			res.status(404).send('Item not found');
+		}
+	}, function() {
+		res.status(500).send();
 	});
-	var updatedAttributes = {};
 
-	if (typeof matchedObject === 'undefined')
-		return res.status(404).send('object not found');
+	// var matchedObject = _.findWhere(todos, {
+	// 	id: idToFind
+	// });
+	// var updatedAttributes = {};
 
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed))
-		updatedAttributes.completed = body.completed;
-	else if (body.hasOwnProperty('completed'))
-		return res.send(400).send('Incorrect Data Type - Completed');
+	// if (typeof matchedObject === 'undefined')
+	// 	return res.status(404).send('object not found');
 
-	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0)
-		updatedAttributes.description = body.description.trim();
-	else if (body.hasOwnProperty('description'))
-		return res.send(400).send('Incorrect Data Type - Description');
+	// if (body.hasOwnProperty('completed') && _.isBoolean(body.completed))
+	// 	updatedAttributes.completed = body.completed;
+	// else if (body.hasOwnProperty('completed'))
+	// 	return res.send(400).send('Incorrect Data Type - Completed');
 
-	_.extend(matchedObject, updatedAttributes);
-	res.json(matchedObject);
+	// if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0)
+	// 	updatedAttributes.description = body.description.trim();
+	// else if (body.hasOwnProperty('description'))
+	// 	return res.send(400).send('Incorrect Data Type - Description');
+
+	// _.extend(matchedObject, updatedAttributes);
+	// res.json(matchedObject);
 });
 
 db.sequelize.sync().then(function() {

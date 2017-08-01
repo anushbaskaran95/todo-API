@@ -1,3 +1,5 @@
+var _ = require('underscore');
+
 module.exports = function(sequelize, DataTypes) {
 	return sequelize.define('todo', {
 		description: {
@@ -10,6 +12,19 @@ module.exports = function(sequelize, DataTypes) {
 		completed: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: false
+		}
+	}, {
+		validate: {
+			isDescriptionString: function() {
+				if (!_.isString(this.description)) {
+					throw new Error('Description only takes string');
+				}
+			},
+			isCompletedBoolean: function() {
+				if (!_.isBoolean(this.completed)) {
+					throw new Error('Completed should be a boolean value');
+				}
+			}
 		}
 	});
 };
