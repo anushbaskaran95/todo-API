@@ -1,6 +1,7 @@
 var Sequelize = require('sequelize');
 var env = process.env.NODE_ENV || 'development';
 var sequelize;
+var _ = require('underscore');
 
 if(env === 'production') {
 	sequelize = new Sequelize(process.env.DATABASE_URL, {
@@ -16,6 +17,12 @@ if(env === 'production') {
 var db = {};
 db.todo = sequelize.import(__dirname + '/models/todo.js');
 db.user = sequelize.import(__dirname + '/models/user.js');
+
+db.user.prototype.toPublicJSON = function () {
+	var json = this.toJSON();
+	return _.pick(json, 'id', 'email', 'createdAt', 'updatedAt');
+};
+
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
